@@ -1,0 +1,1 @@
+- Not going to deal with HTTPs for my service because of time and convenience
