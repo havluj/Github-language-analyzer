@@ -1,6 +1,5 @@
 package com.havluj.github.languageanalyzer.controller;
 
-import com.havluj.github.languageanalyzer.logic.LanguageStatsComputeUtil;
 import com.havluj.github.languageanalyzer.logic.LanguageStatsLogic;
 import com.havluj.github.languageanalyzer.model.SupportedOrg;
 import lombok.NonNull;

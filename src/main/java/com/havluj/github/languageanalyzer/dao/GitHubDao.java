@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHubBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.kohsuke.github.GitHub;
 
@@ -30,8 +31,8 @@ public class GitHubDao {
      *
      * @throws IOException if a connection to GitHub fails.
      */
-    public GitHubDao() throws IOException {
-        this.client = GitHubBuilder.fromEnvironment().build();
+    public GitHubDao(@Value("${github.token}") final String token) throws IOException {
+        this.client = (new GitHubBuilder()).withOAuthToken(token).build();
     }
 
     public GHOrganization getOrg(@NonNull String orgName) {

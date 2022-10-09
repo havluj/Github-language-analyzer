@@ -23,6 +23,7 @@ public class StatRefresher {
      */
     @EventListener(ApplicationReadyEvent.class)
     public void updateDataOnStartup() {
+        log.info("Application startup: fetch stats for all supported orgs.");
         for (SupportedOrg org : SupportedOrg.values()) {
             statsLogic.getLanguageStatsForOrg(org);
         }
@@ -36,6 +37,7 @@ public class StatRefresher {
      */
     @Scheduled(cron = "0 30 2 * * ?")
     public void updateData() {
+        log.info("Daily cron job: refreshing stats for all supported orgs.");
         for (SupportedOrg org : SupportedOrg.values()) {
             statsLogic.refreshStats(org);
         }
