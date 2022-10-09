@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class LanguageAnalyzerApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(LanguageAnalyzerApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(LanguageAnalyzerApplication.class, args);
+    }
 
 }

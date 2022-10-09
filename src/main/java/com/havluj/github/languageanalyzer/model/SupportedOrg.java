@@ -14,7 +14,7 @@ import java.util.Map;
 @Slf4j
 public enum SupportedOrg {
 
-//    PRODUCTBOARD("productboard"),
+    PRODUCTBOARD("productboard"),
     DN("deepnote-classroom");
 
     private static final Map<String, SupportedOrg> LOOKUP = Maps.uniqueIndex(
@@ -24,7 +24,6 @@ public enum SupportedOrg {
 
     @Getter
     private final String orgName;
-
 
     public static SupportedOrg fromName(@NonNull final String name) {
         final String lCaseName = name.toLowerCase();

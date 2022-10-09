@@ -6,10 +6,10 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,11 +23,11 @@ public class GitHubDao {
     private final GitHub client;
 
     /**
-     * A wrapper for a Java client: https://github-api.kohsuke.org/. The library lazy-loads a lot of information.
-     * Because of that, don't access information that you don't need until you truly need it -- for example, once you
-     * try to access an organization's name, the library will make the network call to get the org's metadata.
-     * Therefore, if you only need to build certain objects to get to their properties (e.g. to get org's repos),
-     * don't access the org's other metadata unless you truly need it.
+     * This is a wrapper for https://github-api.kohsuke.org/. Note that the library lazy-loads a lot of information.
+     * Because of that, do not try to access information until you truly need it -- for example, once you
+     * try to access an organization's name, the library will make a network call to get the organization's metadata.
+     * Therefore, if you only need to build certain objects to make other API calls (e.g. to get organization's repos),
+     * don't access the organization's other metadata unless you truly need it.
      *
      * @throws IOException if a connection to GitHub fails.
      */

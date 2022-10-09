@@ -14,11 +14,17 @@ import java.util.Map;
 @Slf4j
 public class LanguageStatsLogic {
 
-    @Autowired StorageDao storageDao;
-    @Autowired LanguageStatsComputeUtil languageStatsComputeUtil;
+    @Autowired
+    StorageDao storageDao;
+    @Autowired
+    LanguageStatsComputeUtil languageStatsComputeUtil;
 
+    /**
+     * Gets language stats for a given org. It will try to fetch data from the storage DAO. If no stats are returned,
+     * it will try to fetch, compute, and store fresh data from GitHub.
+     */
     public LanguageStats getLanguageStatsForOrg(@NonNull final SupportedOrg org) {
-        log.debug(String.format("Trying to fetch languages stats for org %s", org));
+        log.debug(String.format("Trying to fetch languages stats for org [%s].", org));
         Map<String, String> stats = storageDao.getLanguageStats(org.getOrgName());
 
         if (stats == null) {
@@ -31,6 +37,10 @@ public class LanguageStatsLogic {
         }
     }
 
+    /**
+     * Downloads fresh data from GitHub and uses it to compute new language stats. Those stats then get saved (as a new
+     * value or overriding an existing value).
+     */
     public void refreshStats(@NonNull final SupportedOrg org) {
         log.debug(String.format("Starting refresh of stats for org: %s.", org));
         fetchAndStore(org);

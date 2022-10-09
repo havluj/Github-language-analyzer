@@ -5,3 +5,6 @@
 - this is by far not production ready
 - I am not dealing with locale details, like decimal points (e.g. is it "," or ".")
 - not providing configuration on how to round numbers, including precision
+- I didn't bother setting up codestyle
+- I didn't test if I need to manage my filedb (there are options to rebuild it -- to reclaim space).
+- I assume enough disk space and enough heap memory to store my stats
