@@ -12,3 +12,5 @@ java -jar build/libs/languageanalyzer-1.0.jar
 make sure to set your github token in application.properties
 
 ## Notes
+
+100% class coverage, 100% method coverage (excluding main), 99% line coverage

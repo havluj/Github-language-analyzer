@@ -11,3 +11,4 @@
 - I didn't bother setting up different test groups
 - didn't set up code coverage, which we should get to as close as 100%
 - no integration tests
+- I am not closing the file db properly

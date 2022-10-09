@@ -2,6 +2,7 @@ package com.havluj.github.languageanalyzer.dao;
 
 import com.havluj.github.languageanalyzer.model.LanguageStats;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +29,7 @@ import java.util.concurrent.TimeUnit;
  * the server is up and running), but it's useful upon startup.
  */
 @Service
+@Slf4j
 public class StorageDao {
 
     private static final String DB_HTREEMAP_NAME = "stats";
@@ -39,27 +42,32 @@ public class StorageDao {
         inMemDb = DBMaker
                 .memoryDB()
                 .make();
+
+        DBMaker.Maker onDiskDbBuilder;
         if (Arrays.asList(env.getActiveProfiles()).contains("test")) {
-            onDiskDb = DBMaker
-                    .tempFileDB()
-                    .transactionEnable()
-                    .make();
+            onDiskDbBuilder = DBMaker.tempFileDB();
         } else {
-            onDiskDb = DBMaker
-                    .fileDB(dbLocation)
-                    // To protect file from corruption, MapDB offers Write Ahead Log (WAL). It is reliable and simple way
-                    // to make file changes atomic and durable. However, WAL is slower, as data has to be copied and synced
-                    // multiple times between files. That is a tradeoff worth making, since we are not storing a lot of data
-                    // anyway.
-                    .transactionEnable()
-                    // This creates a shutdown hook to close the database automatically before JVM exits. This does not
-                    // protect us from JVM crashes or when it's killed.
-                    .closeOnJvmShutdown()
-                    // This can get us a 10% to 300% improvement in performance if supported. The trade-off is a 4GB size
-                    // limit, which we are easily going to fit into. Read more here: https://mapdb.org/book/performance/
-                    .fileMmapEnableIfSupported()
-                    .make();
+            onDiskDbBuilder = DBMaker.fileDB(dbLocation);
         }
+        onDiskDb = onDiskDbBuilder
+                // To protect file from corruption, MapDB offers Write Ahead Log (WAL). It is reliable and simple way
+                // to make file changes atomic and durable. However, WAL is slower, as data has to be copied and synced
+                // multiple times between files. That is a tradeoff worth making, since we are not storing a lot of data
+                // anyway.
+                .transactionEnable()
+                // This creates a shutdown hook to close the database automatically before JVM exits. This does not
+                // protect us from JVM crashes or when it's killed.
+                .closeOnJvmShutdown()
+                // This can get us a 10% to 300% improvement in performance if supported. The trade-off is a 4GB size
+                // limit, which we are easily going to fit into. Read more here: https://mapdb.org/book/performance/
+                .fileMmapEnableIfSupported()
+                .make();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        log.info("Closing the on disk DB");
+        onDiskDb.close();
     }
 
     /**
@@ -98,7 +106,7 @@ public class StorageDao {
     }
 
     @SuppressWarnings("unchecked")
-    private HTreeMap<String, Map<String, String>> getInMemMap() {
+    HTreeMap<String, Map<String, String>> getInMemMap() {
         return inMemDb.hashMap(DB_HTREEMAP_NAME)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.JAVA)
@@ -108,7 +116,7 @@ public class StorageDao {
     }
 
     @SuppressWarnings("unchecked")
-    private HTreeMap<String, Map<String, String>> getOnDiskMap() {
+    HTreeMap<String, Map<String, String>> getOnDiskMap() {
         return onDiskDb.hashMap(DB_HTREEMAP_NAME)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.JAVA)

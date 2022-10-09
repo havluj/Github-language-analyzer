@@ -20,7 +20,7 @@ import java.util.Map;
 @Slf4j
 public class GitHubDao {
 
-    private final GitHub client;
+    private GitHub client;
 
     /**
      * This is a wrapper for https://github-api.kohsuke.org/. Note that the library lazy-loads a lot of information.
@@ -33,6 +33,12 @@ public class GitHubDao {
      */
     public GitHubDao(@Value("${github.token}") final String token) throws IOException {
         this.client = (new GitHubBuilder()).withOAuthToken(token).build();
+    }
+
+    public static GitHubDao withClient(@NonNull final GitHub client) throws IOException {
+        GitHubDao ghd = new GitHubDao("");
+        ghd.client = client;
+        return ghd;
     }
 
     public GHOrganization getOrg(@NonNull String orgName) {

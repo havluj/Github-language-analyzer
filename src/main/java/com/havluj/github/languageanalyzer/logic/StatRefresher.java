@@ -21,7 +21,7 @@ public class StatRefresher {
 
     /**
      * Application warmup.
-     * <p>
+     *
      * Gets language stats for every supported org upon startup. That will load stats from disk to memory, or if the
      * stats are not on disk, it will fetch fresh stats from GitHub and store them. Because of this, we won't have to
      * fetch/compute stats during the first request.
@@ -37,7 +37,7 @@ public class StatRefresher {
     /**
      * Fetches new stats from GitHub for all supported orgs. Runs every day at 2:30 PM.
      * Cron syntax: second, minute, hour, day of month, month, day(s) of week
-     * <p>
+     *
      * By default, Spring uses a local single-threaded scheduler to run the task, which is acceptable for this use-case.
      */
     @Scheduled(cron = "0 30 2 * * ?")

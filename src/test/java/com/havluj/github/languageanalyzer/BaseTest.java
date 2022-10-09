@@ -15,6 +15,8 @@ public class BaseTest {
     protected static final Map<String, Long> REPO_STAT_2 = Map.of(JAVA, 20l);
     protected static final Map<String, String> LANGUAGE_STAT_MAP = Map.of(JAVA, "0.40", TYPESCRIPT, "0.60");
     protected static final LanguageStats LANGUAGE_STATS = new LanguageStats(LANGUAGE_STAT_MAP);
-    protected static final LanguageStats EMPTY_LANGUAGE_STATS = new LanguageStats(new HashMap<>());
+    protected static final Map<String, String> EMPTY_LANGUAGE_STAT_MAP = Map.of();
+
+    protected static final LanguageStats EMPTY_LANGUAGE_STATS = new LanguageStats(EMPTY_LANGUAGE_STAT_MAP);
 
 }
