@@ -1,7 +1,8 @@
 package com.havluj.github.languageanalyzer.logic;
 
-import com.havluj.github.languageanalyzer.api.dto.LanguageStatsDto;
 import com.havluj.github.languageanalyzer.dao.GitHubDao;
+import com.havluj.github.languageanalyzer.model.LanguageStats;
+import com.havluj.github.languageanalyzer.model.SupportedOrg;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.github.GHRepository;
@@ -16,22 +17,20 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class ComputeLanguageLogic {
-
-    // todo make this a param in the api
-    private static final int DECIMAL_PRECISION = 2;
+public class LanguageStatsComputeUtil {
 
     @Autowired
     GitHubDao gitHubDao;
 
-    public LanguageStatsDto computeLanguageStatsForOrg(@NonNull final String orgName) {
+    public LanguageStats fetchFreshLanguageStatsForOrg(@NonNull final SupportedOrg org) {
         log.debug("Computing sums for all languages across all repos.");
-        final List<GHRepository> repos = gitHubDao.listOrgRepos(gitHubDao.getOrg(orgName));
-        final Map<String, BigDecimal> langStats = getLanguageSums(repos);
-        return new LanguageStatsDto(langStats);
+        final List<GHRepository> repos = gitHubDao.listOrgRepos(gitHubDao.getOrg(org.getOrgName()));
+
+        final Map<String, String> langStats = getLanguageSums(repos);
+        return new LanguageStats(langStats);
     }
 
-    private Map<String, BigDecimal> getLanguageSums(@NonNull final List<GHRepository> repos) {
+    private Map<String, String> getLanguageSums(@NonNull final List<GHRepository> repos) {
         log.debug("Computing sums for all languages across all repos.");
         BigDecimal totalSum = new BigDecimal(0);
         Map<String, BigDecimal> languageSums = new HashMap<>();
@@ -51,17 +50,25 @@ public class ComputeLanguageLogic {
         }
     }
 
-    private Map<String, BigDecimal> computePercentages(@NonNull final BigDecimal total,
-                                                       @NonNull final Map<String, BigDecimal> components) {
+    private Map<String, String> computePercentages(@NonNull final BigDecimal total,
+                                                   @NonNull final Map<String, BigDecimal> components) {
         log.debug("Computing percentages for languages used.");
-        Map<String, BigDecimal> languageSums = new HashMap<>();
+        Map<String, String> languageSums = new HashMap<>();
         for (Map.Entry<String, BigDecimal> entry : components.entrySet()) {
             final String language = entry.getKey();
-            final BigDecimal percentage = entry.getValue().divide(total, DECIMAL_PRECISION, RoundingMode.HALF_DOWN);
-            languageSums.put(language, percentage);
-            log.debug(String.format("[%s]: %s.", language, percentage));
+            final String serializedPercentage = serialize(getPercentage(total, entry.getValue()));
+            languageSums.put(language, serializedPercentage);
+            log.debug(String.format("[%s]: %s.", language, serializedPercentage));
         }
         log.debug("Finished computing percentages for languages used.");
         return languageSums;
+    }
+
+    private BigDecimal getPercentage(@NonNull final BigDecimal denominator, @NonNull final BigDecimal numerator) {
+        return numerator.divide(denominator, 2, RoundingMode.HALF_EVEN);
+    }
+
+    private String serialize(@NonNull final BigDecimal num) {
+        return String.format("%,.2f", num.setScale(2, RoundingMode.HALF_EVEN));
     }
 }

@@ -1,14 +1,12 @@
 package com.havluj.github.languageanalyzer.dao;
 
 import com.havluj.github.languageanalyzer.exceptions.GitHubIoErrorException;
-import com.havluj.github.languageanalyzer.exceptions.OrganizationDoesNotExistException;
+import com.havluj.github.languageanalyzer.exceptions.OrgNotFoundException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHubBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.kohsuke.github.GitHub;
 
@@ -42,7 +40,7 @@ public class GitHubDao {
             return client.getOrganization(orgName);
         } catch (IOException e) {
             log.error(String.format("Failed getting org info from GitHub. Org name: [%s].", orgName), e);
-            throw new OrganizationDoesNotExistException(e);
+            throw new OrgNotFoundException(e);
         }
     }
 

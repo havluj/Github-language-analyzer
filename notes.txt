@@ -3,3 +3,5 @@
 - I don't deal with service and health metrics
 - I assume we're ok with rounding errors
 - this is by far not production ready
+- I am not dealing with locale details, like decimal points (e.g. is it "," or ".")
+- not providing configuration on how to round numbers, including precision

@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class LanguageStatsDtoControllerTest {
+class LanguageStatsControllerTest {
 
     @Autowired
     private MockMvc mvc;
