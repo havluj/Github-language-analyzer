@@ -20,7 +20,7 @@ import java.util.Map;
 public class LanguageStatsComputeUtil {
 
     @Autowired
-    GitHubDao gitHubDao;
+    private GitHubDao gitHubDao;
 
     public LanguageStats fetchFreshLanguageStatsForOrg(@NonNull final SupportedOrg org) {
         log.debug("Computing sums for all languages across all repos.");

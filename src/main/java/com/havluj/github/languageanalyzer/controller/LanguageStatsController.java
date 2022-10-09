@@ -16,7 +16,7 @@ import java.util.Map;
 public class LanguageStatsController {
 
     @Autowired
-    LanguageStatsLogic languageStatsLogic;
+    private LanguageStatsLogic languageStatsLogic;
 
     @GetMapping("/org/{org}/languages")
     public Map<String, String> getLanguageStatistics(@NonNull @PathVariable(value = "org") String org) {

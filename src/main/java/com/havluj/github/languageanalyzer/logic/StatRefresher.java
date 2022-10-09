@@ -1,19 +1,23 @@
 package com.havluj.github.languageanalyzer.logic;
 
 import com.havluj.github.languageanalyzer.model.SupportedOrg;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
+@Profile("!test")
+@AllArgsConstructor
 public class StatRefresher {
 
     @Autowired
-    LanguageStatsLogic statsLogic;
+    private LanguageStatsLogic statsLogic;
 
     /**
      * Application warmup.

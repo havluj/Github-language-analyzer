@@ -7,41 +7,59 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * DAO to store language stats in memory and on disk. The DAO will always try to return data from memory when it's
+ * there, otherwise data will be reloaded form disk.
+ *
+ * Implementation wise, we use MapDB's HTreeMaps to store our data. They are thread-safe (it employs read-write locks)
+ * and scale under parallel updates. Because of that, we don't need to synchronize access in this DAO.
+ *
+ * We also employ MapDB's eviction strategies. All data will be evicted after 25 hrs (which should never happen when
+ * the server is up and running), but it's useful upon startup.
+ */
 @Service
 public class StorageDao {
 
     private static final String DB_HTREEMAP_NAME = "stats";
 
     private final DB inMemDb;
-    private final DB fileDb;
+    private final DB onDiskDb;
 
-    public StorageDao(@Value("${db.location}") final String dbLocation) {
-        // HTreeMaps, which we use to store our data, provide HashMap and HashSet collections for MapDB. It is
-        // thread-safe (it employs read-write locks) and scales under parallel updates. That's why there is no need to
-        // synchronize access.
-
+    public StorageDao(@Value("${db.location}") final String dbLocation,
+                      @Autowired Environment env) {
         inMemDb = DBMaker
                 .memoryDB()
                 .make();
-        fileDb = DBMaker
-                .fileDB(dbLocation)
-                // To protect file from corruption, MapDB offers Write Ahead Log (WAL). It is reliable and simple way
-                // to make file changes atomic and durable. However, WAL is slower, as data has to be copied and synced
-                // multiple times between files. That is a tradeoff worth making, since we are not storing a lot of data
-                // anyway.
-                .transactionEnable()
-                // This creates a shutdown hook to close the database automatically before JVM exits. This does not
-                // protect us from JVM crashes or when it's killed.
-                .closeOnJvmShutdown()
-                // This can get us a 10% to 300% improvement in performance if supported. The trade-off is a 4GB size
-                // limit, which we are easily going to fit into. Read more here: https://mapdb.org/book/performance/
-                .fileMmapEnableIfSupported()
-                .make();
+        if (Arrays.asList(env.getActiveProfiles()).contains("test")) {
+            onDiskDb = DBMaker
+                    .tempFileDB()
+                    .transactionEnable()
+                    .make();
+        } else {
+            onDiskDb = DBMaker
+                    .fileDB(dbLocation)
+                    // To protect file from corruption, MapDB offers Write Ahead Log (WAL). It is reliable and simple way
+                    // to make file changes atomic and durable. However, WAL is slower, as data has to be copied and synced
+                    // multiple times between files. That is a tradeoff worth making, since we are not storing a lot of data
+                    // anyway.
+                    .transactionEnable()
+                    // This creates a shutdown hook to close the database automatically before JVM exits. This does not
+                    // protect us from JVM crashes or when it's killed.
+                    .closeOnJvmShutdown()
+                    // This can get us a 10% to 300% improvement in performance if supported. The trade-off is a 4GB size
+                    // limit, which we are easily going to fit into. Read more here: https://mapdb.org/book/performance/
+                    .fileMmapEnableIfSupported()
+                    .make();
+        }
     }
 
     /**
@@ -49,9 +67,9 @@ public class StorageDao {
      */
     public void updateLanguageStats(@NonNull final String orgName, @NonNull final LanguageStats stats) {
         // Write to disk first, as we are not blocking clients from reading (now stale) data from memory.
-        val fileMap = getFileMap();
-        fileMap.put(orgName, stats.getLanguageMap());
-        fileDb.commit();
+        val onDiskMap = getOnDiskMap();
+        onDiskMap.put(orgName, stats.getLanguageMap());
+        onDiskDb.commit();
 
         // Update value in-memory.
         val inMemMap = getInMemMap();
@@ -70,7 +88,7 @@ public class StorageDao {
 
         // reload from disk if not found
         if (stats == null) {
-            stats = getFileMap().get(orgName);
+            stats = getOnDiskMap().get(orgName);
             if (stats != null) {
                 inMemMap.put(orgName, stats);
             }
@@ -84,14 +102,18 @@ public class StorageDao {
         return inMemDb.hashMap(DB_HTREEMAP_NAME)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.JAVA)
+                .expireAfterCreate(25, TimeUnit.HOURS)
+                .expireAfterUpdate(25, TimeUnit.HOURS)
                 .createOrOpen();
     }
 
     @SuppressWarnings("unchecked")
-    private HTreeMap<String, Map<String, String>> getFileMap() {
-        return fileDb.hashMap(DB_HTREEMAP_NAME)
+    private HTreeMap<String, Map<String, String>> getOnDiskMap() {
+        return onDiskDb.hashMap(DB_HTREEMAP_NAME)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.JAVA)
+                .expireAfterCreate(25, TimeUnit.HOURS)
+                .expireAfterUpdate(25, TimeUnit.HOURS)
                 .createOrOpen();
     }
 }

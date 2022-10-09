@@ -15,9 +15,9 @@ import java.util.Map;
 public class LanguageStatsLogic {
 
     @Autowired
-    StorageDao storageDao;
+    private StorageDao storageDao;
     @Autowired
-    LanguageStatsComputeUtil languageStatsComputeUtil;
+    private LanguageStatsComputeUtil languageStatsComputeUtil;
 
     /**
      * Gets language stats for a given org. It will try to fetch data from the storage DAO. If no stats are returned,
