@@ -1,1 +1,5 @@
 - Not going to deal with HTTPs for my service because of time and convenience
+- I don't deal with logging
+- I don't deal with service and health metrics
+- I assume we're ok with rounding errors
+- this is by far not production ready
